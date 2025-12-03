@@ -12,10 +12,10 @@ export function FeaturesSection({ section, theme }: FeaturesSectionProps) {
 
   return (
     <section
-      className={`py-16 px-6 ${isDark ? "bg-slate-800" : "bg-slate-50"}`}
+      className={`py-20 px-6 ${isDark ? "bg-slate-800" : "bg-slate-50"}`}
     >
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
           <h2
             className={`text-3xl md:text-4xl font-bold mb-4 ${
               isDark ? "text-white" : "text-slate-900"

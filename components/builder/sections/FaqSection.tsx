@@ -14,11 +14,11 @@ export function FaqSection({ section, theme }: FaqSectionProps) {
 
   return (
     <section
-      className={`py-16 px-6 ${isDark ? "bg-slate-800" : "bg-slate-50"}`}
+      className={`py-20 px-6 ${isDark ? "bg-slate-800" : "bg-slate-50"}`}
     >
       <div className="max-w-3xl mx-auto">
         <h2
-          className={`text-3xl md:text-4xl font-bold text-center mb-12 ${
+          className={`text-3xl md:text-4xl font-bold text-center mb-16 ${
             isDark ? "text-white" : "text-slate-900"
           }`}
         >
@@ -28,7 +28,7 @@ export function FaqSection({ section, theme }: FaqSectionProps) {
           {section.items.map((item, index) => (
             <div
               key={index}
-              className={`rounded-lg overflow-hidden ${
+              className={`rounded-xl overflow-hidden ${
                 isDark ? "bg-slate-900" : "bg-white shadow-sm"
               }`}
             >

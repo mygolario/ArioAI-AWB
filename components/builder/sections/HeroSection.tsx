@@ -12,11 +12,11 @@ export function HeroSection({ section, theme }: HeroSectionProps) {
 
   return (
     <section
-      className={`py-20 px-6 text-center ${
+      className={`py-24 px-6 text-center ${
         isDark ? "bg-slate-900" : "bg-white"
       }`}
     >
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-8">
         {section.eyebrow && (
           <p
             className={`text-sm font-medium tracking-wide uppercase ${

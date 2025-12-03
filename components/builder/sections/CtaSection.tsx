@@ -12,9 +12,9 @@ export function CtaSection({ section, theme }: CtaSectionProps) {
 
   return (
     <section
-      className={`py-16 px-6 ${isDark ? "bg-blue-900/30" : "bg-blue-50"}`}
+      className={`py-20 px-6 ${isDark ? "bg-blue-900/30" : "bg-blue-50"}`}
     >
-      <div className="max-w-4xl mx-auto text-center space-y-6">
+      <div className="max-w-4xl mx-auto text-center space-y-8">
         {section.eyebrow && (
           <p
             className={`text-sm font-medium tracking-wide uppercase ${
