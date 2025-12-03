@@ -12,6 +12,8 @@ export default function GeneratePage() {
   const [layout, setLayout] = useState<WebsiteLayout | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showJson, setShowJson] = useState(false);
+  const [editInstruction, setEditInstruction] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,6 +49,37 @@ export default function GeneratePage() {
     }
   };
 
+  const handleEditLayout = async () => {
+    if (!layout || !editInstruction.trim()) return;
+    setIsEditing(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/layout/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ layout, instruction: editInstruction }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Failed to edit layout");
+        setIsEditing(false);
+        return;
+      }
+
+      const data = await res.json();
+      setLayout(data.layout);
+      setResultJson(JSON.stringify(data.layout, null, 2));
+      setEditInstruction("");
+    } catch (err: any) {
+      console.error("Edit error:", err);
+      setError(err.message || "An unexpected error occurred");
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col lg:flex-row gap-6">
       {/* Left Panel - Input */}
@@ -69,11 +102,55 @@ export default function GeneratePage() {
             type="submit"
             className="w-full"
             size="lg"
-            disabled={!prompt || isLoading}
+            disabled={!prompt || isLoading || isEditing}
           >
             {isLoading ? "Generating..." : "Generate Website"}
           </Button>
         </form>
+
+        {/* Refine Layout Section */}
+        <div className="mt-6 p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <h3 className="text-lg font-semibold text-white mb-2">Refine Layout</h3>
+          <p className="text-sm text-slate-400 mb-3">
+            Describe changes to apply to the current layout.
+          </p>
+          <div className="text-xs text-slate-500 mb-4 space-y-1">
+            <p>💡 Try instructions like:</p>
+            <ul className="list-disc list-inside space-y-0.5 ml-2">
+              <li>&quot;Make the hero headline more bold and ambitious.&quot;</li>
+              <li>&quot;Add a pricing section with 3 plans: Starter, Pro, Enterprise.&quot;</li>
+              <li>&quot;Add an FAQ section about pricing and support.&quot;</li>
+            </ul>
+          </div>
+          <textarea
+            className="w-full h-24 p-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+            placeholder="e.g. Change the hero headline to 'Welcome to ArioAI'..."
+            value={editInstruction}
+            onChange={(e) => setEditInstruction(e.target.value)}
+            disabled={!layout || isLoading || isEditing}
+          />
+          <Button
+            type="button"
+            className="w-full mt-3"
+            size="default"
+            disabled={!layout || !editInstruction.trim() || isLoading || isEditing}
+            onClick={handleEditLayout}
+          >
+            {isEditing ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                Applying...
+              </span>
+            ) : (
+              "Apply Changes"
+            )}
+          </Button>
+          {error && !isLoading && !isEditing && (
+            <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Right Panel - Preview/JSON */}
@@ -98,7 +175,15 @@ export default function GeneratePage() {
                 <p className="text-sm text-slate-500">This may take a few seconds</p>
               </div>
             </div>
-          ) : error ? (
+          ) : isEditing ? (
+            <div className="h-full flex items-center justify-center text-slate-400">
+              <div className="text-center space-y-3">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mx-auto"></div>
+                <p className="text-lg">Applying changes...</p>
+                <p className="text-sm text-slate-500">Updating your layout</p>
+              </div>
+            </div>
+          ) : error && !layout ? (
             <div className="p-4">
               <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-red-400">
                 <p className="font-semibold mb-1">Error</p>
