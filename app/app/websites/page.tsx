@@ -13,7 +13,7 @@ export default async function WebsitesPage() {
     id: w.id,
     name: w.name,
     createdAt: w.createdAt.toISOString(),
-    layout: w.layout as WebsiteLayout,
+    layout: w.layout as unknown as WebsiteLayout,
   }));
 
   return (
