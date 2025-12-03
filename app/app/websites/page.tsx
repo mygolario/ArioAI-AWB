@@ -22,7 +22,7 @@ export default async function WebsitesPage() {
   });
 
   // Map to SavedWebsite format
-  const items: SavedWebsite[] = websites.map((w: { id: string; name: string; createdAt: Date; layout: unknown }) => ({
+  const items: SavedWebsite[] = websites.map((w) => ({
     id: w.id,
     name: w.name,
     createdAt: w.createdAt.toISOString(),
