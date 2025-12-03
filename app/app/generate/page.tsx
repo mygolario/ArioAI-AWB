@@ -184,6 +184,9 @@ export default function GeneratePage() {
             </a>{" "}
             tab.
           </p>
+          <p className="text-xs text-slate-500">
+            Saved websites can be published and exported from the Websites tab.
+          </p>
         </div>
 
         {/* Refine Layout Section */}

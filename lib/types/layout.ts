@@ -93,4 +93,6 @@ export interface SavedWebsite {
   name: string;
   createdAt: string; // ISO string
   layout: WebsiteLayout;
+  isPublic?: boolean;
+  publishedAt?: string | null;
 }
