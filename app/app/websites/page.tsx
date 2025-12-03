@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 import { SavedWebsite, WebsiteLayout } from "@/lib/types/layout";
 import { WebsitesList } from "@/components/builder/WebsitesList";
-import { Website } from "@prisma/client";
 
 export default async function WebsitesPage() {
   // Fetch websites from database
@@ -10,11 +9,11 @@ export default async function WebsitesPage() {
   });
 
   // Map to SavedWebsite format
-  const items: SavedWebsite[] = websites.map((w: Website) => ({
+  const items: SavedWebsite[] = websites.map((w: { id: string; name: string; createdAt: Date; layout: unknown }) => ({
     id: w.id,
     name: w.name,
     createdAt: w.createdAt.toISOString(),
-    layout: w.layout as unknown as WebsiteLayout,
+    layout: w.layout as WebsiteLayout,
   }));
 
   return (
