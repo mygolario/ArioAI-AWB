@@ -2,13 +2,9 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { WebsiteLayout, SavedWebsite } from "@/lib/types/layout";
+import { WebsiteLayout } from "@/lib/types/layout";
 import { WebsitePreview } from "@/components/builder/WebsitePreview";
-import {
-  loadSavedWebsites,
-  saveSavedWebsites,
-  CURRENT_LAYOUT_SESSION_KEY,
-} from "@/lib/utils/storage";
+import { CURRENT_LAYOUT_SESSION_KEY } from "@/lib/utils/storage";
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
@@ -38,7 +34,7 @@ export default function GeneratePage() {
     }
   }, []);
 
-  const handleSaveLayout = () => {
+  const handleSaveLayout = async () => {
     if (!layout) return;
 
     const name = window.prompt('Name for this website:', layout?.siteName ?? 'Untitled website');
@@ -47,19 +43,25 @@ export default function GeneratePage() {
     setSaveStatus('loading');
 
     try {
-      const existing = loadSavedWebsites();
-      const newWebsite: SavedWebsite = {
-        id: crypto.randomUUID(),
-        name,
-        createdAt: new Date().toISOString(),
-        layout,
-      };
-      saveSavedWebsites([...existing, newWebsite]);
-      setSaveStatus('saved');
+      const res = await fetch('/api/websites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, layout }),
+      });
 
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        console.error('Failed to save website:', data);
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+        return;
+      }
+
+      setSaveStatus('saved');
       // Reset status after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch {
+    } catch (err) {
+      console.error('Error saving website:', err);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 2000);
     }
