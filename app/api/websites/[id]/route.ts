@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 // GET /api/websites/[id] - Get a single website by ID
@@ -28,6 +30,40 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+// PATCH /api/websites/[id] - Publish/Unpublish a website
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const id = params.id;
+  const body = await req.json().catch(() => null);
+  const { isPublic } = body ?? {};
+
+  if (typeof isPublic !== "boolean") {
+    return NextResponse.json({ error: "Invalid isPublic" }, { status: 400 });
+  }
+
+  const website = await prisma.website.update({
+    where: {
+      id_userId: {
+        id,
+        userId: session.user.id,
+      },
+    },
+    data: {
+      isPublic,
+      publishedAt: isPublic ? new Date() : null,
+    },
+  });
+
+  return NextResponse.json({ website });
 }
 
 // DELETE /api/websites/[id] - Delete a website by ID
