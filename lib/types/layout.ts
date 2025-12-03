@@ -87,3 +87,10 @@ export interface FaqItem {
   question: string;
   answer: string;
 }
+
+export interface SavedWebsite {
+  id: string;
+  name: string;
+  createdAt: string; // ISO string
+  layout: WebsiteLayout;
+}

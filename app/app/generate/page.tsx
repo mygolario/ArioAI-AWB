@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { WebsiteLayout } from "@/lib/types/layout";
+import { WebsiteLayout, SavedWebsite } from "@/lib/types/layout";
 import { WebsitePreview } from "@/components/builder/WebsitePreview";
+import {
+  loadSavedWebsites,
+  saveSavedWebsites,
+  CURRENT_LAYOUT_SESSION_KEY,
+} from "@/lib/utils/storage";
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
@@ -14,6 +19,51 @@ export default function GeneratePage() {
   const [showJson, setShowJson] = useState(false);
   const [editInstruction, setEditInstruction] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error' | 'loading'>('idle');
+
+  // Load layout from sessionStorage if coming from Websites page
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = window.sessionStorage.getItem(CURRENT_LAYOUT_SESSION_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as WebsiteLayout;
+        setLayout(parsed);
+        setResultJson(JSON.stringify(parsed, null, 2));
+      } catch {
+        // ignore
+      } finally {
+        window.sessionStorage.removeItem(CURRENT_LAYOUT_SESSION_KEY);
+      }
+    }
+  }, []);
+
+  const handleSaveLayout = () => {
+    if (!layout) return;
+
+    const name = window.prompt('Name for this website:', layout?.siteName ?? 'Untitled website');
+    if (!name) return;
+
+    setSaveStatus('loading');
+
+    try {
+      const existing = loadSavedWebsites();
+      const newWebsite: SavedWebsite = {
+        id: crypto.randomUUID(),
+        name,
+        createdAt: new Date().toISOString(),
+        layout,
+      };
+      saveSavedWebsites([...existing, newWebsite]);
+      setSaveStatus('saved');
+
+      // Reset status after 2 seconds
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -107,6 +157,32 @@ export default function GeneratePage() {
             {isLoading ? "Generating..." : "Generate Website"}
           </Button>
         </form>
+
+        {/* Save Website Button */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSaveLayout}
+              disabled={!layout || isLoading || isEditing || saveStatus === 'loading'}
+              className="flex-1 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium text-white transition-colors"
+            >
+              {saveStatus === 'loading' ? 'Saving...' : 'Save Website'}
+            </button>
+            {saveStatus === 'saved' && (
+              <span className="text-xs text-emerald-400">✓ Saved!</span>
+            )}
+            {saveStatus === 'error' && (
+              <span className="text-xs text-red-400">Failed to save</span>
+            )}
+          </div>
+          <p className="text-xs text-slate-500">
+            View all saved websites in the{" "}
+            <a href="/app/websites" className="text-blue-400 hover:underline">
+              Websites
+            </a>{" "}
+            tab.
+          </p>
+        </div>
 
         {/* Refine Layout Section */}
         <div className="mt-6 p-4 rounded-xl bg-slate-900 border border-slate-800">

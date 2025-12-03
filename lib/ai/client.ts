@@ -29,6 +29,21 @@ function getAIConfig() {
   return { apiKey, isOpenRouter, baseUrl, model };
 }
 
+// Helper to strip markdown code blocks from AI response
+function stripMarkdownCodeBlocks(content: string): string {
+  // Remove ```json ... ``` or ``` ... ``` wrappers
+  const stripped = content.trim();
+  if (stripped.startsWith("```")) {
+    // Find the end of the first line (e.g., ```json)
+    const firstNewline = stripped.indexOf("\n");
+    const lastBackticks = stripped.lastIndexOf("```");
+    if (firstNewline !== -1 && lastBackticks > firstNewline) {
+      return stripped.slice(firstNewline + 1, lastBackticks).trim();
+    }
+  }
+  return stripped;
+}
+
 // Shared function to call the AI API
 async function callAI(
   systemPrompt: string,
@@ -67,11 +82,14 @@ async function callAI(
   }
 
   const data = await response.json();
-  const content = data.choices[0]?.message?.content;
+  let content = data.choices[0]?.message?.content;
 
   if (!content) {
     throw new Error("No content received from AI");
   }
+
+  // Strip markdown code blocks if present (some models wrap JSON in ```json ... ```)
+  content = stripMarkdownCodeBlocks(content);
 
   return content;
 }
