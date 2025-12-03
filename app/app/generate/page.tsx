@@ -2,12 +2,18 @@
 
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { WebsiteLayout } from "@/lib/types/layout";
+import { WebsitePreview } from "@/components/preview/website-preview";
+
+type PreviewTab = "preview" | "json";
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [resultJson, setResultJson] = useState<string | null>(null);
+  const [layout, setLayout] = useState<WebsiteLayout | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<PreviewTab>("preview");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -16,6 +22,7 @@ export default function GeneratePage() {
     setIsLoading(true);
     setError(null);
     setResultJson(null);
+    setLayout(null);
 
     try {
       const res = await fetch("/api/generate", {
@@ -26,14 +33,17 @@ export default function GeneratePage() {
 
       if (res.ok) {
         const data = await res.json();
+        setLayout(data.layout);
         setResultJson(JSON.stringify(data.layout, null, 2));
       } else {
         const errorData = await res.json();
         setError(errorData.error || "Failed to generate website");
+        setLayout(null);
       }
     } catch (err: any) {
       console.error("Generation error:", err);
       setError(err.message || "An unexpected error occurred");
+      setLayout(null);
     } finally {
       setIsLoading(false);
     }
@@ -70,12 +80,36 @@ export default function GeneratePage() {
 
       {/* Right Panel - Preview/JSON */}
       <div className="flex-1 rounded-xl bg-slate-900 border border-slate-800 flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-slate-800 bg-slate-900/50">
+        <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
           <h3 className="font-medium text-white">
-            {resultJson ? "Generated Layout (JSON)" : "Preview"}
+            {layout ? layout.siteName : "Preview"}
           </h3>
+          {layout && (
+            <div className="flex bg-slate-800 rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab("preview")}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "preview"
+                    ? "bg-slate-700 text-white"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Preview
+              </button>
+              <button
+                onClick={() => setActiveTab("json")}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "json"
+                    ? "bg-slate-700 text-white"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                JSON
+              </button>
+            </div>
+          )}
         </div>
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto">
           {isLoading ? (
             <div className="h-full flex items-center justify-center text-slate-400">
               <div className="text-center space-y-2">
@@ -84,18 +118,24 @@ export default function GeneratePage() {
               </div>
             </div>
           ) : error ? (
-            <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-red-400">
-              <p className="font-semibold mb-1">Error</p>
-              <p className="text-sm">{error}</p>
+            <div className="p-4">
+              <div className="p-4 rounded-md bg-red-500/10 border border-red-500/20 text-red-400">
+                <p className="font-semibold mb-1">Error</p>
+                <p className="text-sm">{error}</p>
+              </div>
             </div>
-          ) : resultJson ? (
-            <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">
-              {resultJson}
-            </pre>
+          ) : layout ? (
+            activeTab === "preview" ? (
+              <WebsitePreview layout={layout} />
+            ) : (
+              <pre className="p-4 text-xs text-green-400 font-mono whitespace-pre-wrap">
+                {resultJson}
+              </pre>
+            )
           ) : (
-            <div className="h-full flex items-center justify-center text-slate-500 border-dashed border-2 border-slate-800 rounded-lg m-4">
-              <div className="text-center space-y-2">
-                <span className="text-2xl block">🤖</span>
+            <div className="h-full flex items-center justify-center text-slate-500 p-4">
+              <div className="border-dashed border-2 border-slate-800 rounded-lg p-8 text-center">
+                <span className="text-2xl block mb-2">🤖</span>
                 <p>Enter a prompt to generate a website layout.</p>
               </div>
             </div>
