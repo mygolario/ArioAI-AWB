@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { WebsiteLayout } from "@/lib/types/layout";
-import { WebsitePreview } from "@/components/preview/website-preview";
+import { WebsitePreview } from "@/components/builder/WebsitePreview";
 
 type PreviewTab = "preview" | "json";
 
