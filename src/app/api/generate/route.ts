@@ -19,7 +19,11 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("API Error:", error);
     const errorMessage = error?.message || "Failed to generate website";
-    const statusCode = errorMessage.includes("API Key") || errorMessage.includes("API Error") ? 500 : 400;
+    
+    // Default to 500 (server error) since errors from generateWebsiteFromDescription
+    // are server-side processing issues (API calls, parsing, validation, etc.)
+    // Only client validation errors return 400, and those are handled above
+    const statusCode = 500;
     
     return NextResponse.json(
       { error: errorMessage },
