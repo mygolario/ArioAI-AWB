@@ -1,10 +1,15 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { renderPage } from "@/src/lib/renderer";
 import type { Website } from "@/src/lib/types";
 import { tokens } from "@/src/lib/tokens";
 
-// Extend globalThis to include our temporary website storage
+// Extend Window interface to include our temporary website storage
 declare global {
-  var __TEMP_WEBSITE__: Website | undefined;
+  interface Window {
+    __TEMP_WEBSITE__?: Website;
+  }
 }
 
 interface PreviewPageProps {
@@ -15,12 +20,33 @@ interface PreviewPageProps {
 
 export default function PreviewPage({ params }: PreviewPageProps) {
   const slug = params.slug;
+  const [website, setWebsite] = useState<Website | undefined>(undefined);
 
-  // TEMPORARY TEST DATA (Replace later with DB fetch)
-  const website: Website | undefined = 
-    typeof window !== "undefined" 
-      ? (window as any).__TEMP_WEBSITE__ 
-      : undefined;
+  // Load website data from window on client-side only
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setWebsite(window.__TEMP_WEBSITE__);
+    }
+  }, []);
+
+  // Show loading state while checking for website data
+  if (website === undefined) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: tokens.colors.background,
+          padding: "2rem",
+          textAlign: "center",
+          color: tokens.colors.text,
+        }}
+      >
+        <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
+          Loading...
+        </h1>
+      </div>
+    );
+  }
 
   if (!website) {
     return (
